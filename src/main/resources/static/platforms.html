@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platforms | Payanam Junction</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="logo">🚆</div>
+        <div>
+            <h2>Payanam Junction</h2>
+            <p>Railway Management System</p>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <h3>MAIN MENU</h3>
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="trains.html">🚆 Train Services</a>
+        <a href="reservations.html">🎫 Reservations</a>
+        <a href="platforms.html" class="active">🚉 Platforms</a>
+        <a href="allocation.html">📍 Platform Allocation</a>
+        <a href="activity.html">📋 Activity Log</a>
+    </aside>
+
+    <main>
+        <h1 class="page-title">Platform Management</h1>
+        <p class="page-subtitle">
+            Platform capacity and status from the database.
+        </p>
+
+        <section class="stats">
+            <div class="stat">
+                <h3>Total Platforms</h3>
+                <h2 id="totalPlatforms">Loading...</h2>
+            </div>
+            <div class="stat">
+                <h3>Available</h3>
+                <h2 id="availablePlatforms">Loading...</h2>
+            </div>
+            <div class="stat">
+                <h3>Occupied</h3>
+                <h2 id="occupiedPlatforms">Loading...</h2>
+            </div>
+            <div class="stat">
+                <h3>Station</h3>
+                <h2>PJ-01</h2>
+            </div>
+        </section>
+
+        <p id="message" role="status">Loading platforms...</p>
+
+        <section class="grid-two" id="platformCards"></section>
+
+        <section class="card">
+            <h2>Platform Compatibility</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Platform</th>
+                            <th>Length</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="platformTableBody"></tbody>
+                </table>
+            </div>
+            <p class="note">
+                A train can use a platform only if its required length fits
+                and its occupation interval does not overlap another train.
+            </p>
+        </section>
+
+        <footer>
+            Payanam Junction Railway Reservation System
+        </footer>
+    </main>
+</div>
+
+<script>
+async function loadPlatforms() {
+    const message = document.getElementById("message");
+    const cards = document.getElementById("platformCards");
+    const tableBody = document.getElementById("platformTableBody");
+
+    try {
+        // Load platform records from backend
+        const response = await fetch("/api/platforms");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const platforms = await response.json();
+
+        const available = platforms.filter(
+            p => p.status === "AVAILABLE"
+        ).length;
+
+        const occupied = platforms.filter(
+            p => p.status === "OCCUPIED"
+        ).length;
+
+        document.getElementById("totalPlatforms").textContent =
+            platforms.length;
+        document.getElementById("availablePlatforms").textContent =
+            available;
+        document.getElementById("occupiedPlatforms").textContent =
+            occupied;
+
+        cards.replaceChildren();
+        tableBody.replaceChildren();
+
+        platforms.forEach(platform => {
+            const number = platform.platform_number;
+            const length = platform.platform_length;
+            const status = platform.status || "AVAILABLE";
+            const isAvailable = status === "AVAILABLE";
+
+            const card = document.createElement("div");
+            card.className = "card";
+
+            const title = document.createElement("h2");
+            title.textContent = "Platform " + number;
+
+            const lengthText = document.createElement("p");
+            lengthText.className = "page-subtitle";
+            lengthText.textContent = "Length: " + length + " metres";
+
+            const statusText = document.createElement("p");
+            const badge = document.createElement("span");
+            badge.className = "status " +
+                (isAvailable ? "status-green" : "status-red");
+            badge.textContent = status;
+            statusText.appendChild(badge);
+
+            card.append(title, lengthText, statusText);
+            cards.appendChild(card);
+
+            const row = document.createElement("tr");
+
+            [ "Platform " + number, length + " m" ].forEach(value => {
+                const cell = document.createElement("td");
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            const statusCell = document.createElement("td");
+            const tableBadge = document.createElement("span");
+            tableBadge.className = "status " +
+                (isAvailable ? "status-green" : "status-red");
+            tableBadge.textContent = status;
+            statusCell.appendChild(tableBadge);
+            row.appendChild(statusCell);
+
+            tableBody.appendChild(row);
+        });
+
+        message.textContent = "Platform details loaded successfully.";
+
+    } catch (error) {
+        message.textContent =
+            "Could not load platforms. The /api/platforms backend endpoint may not exist yet.";
+        console.error("Platform loading error:", error);
+    }
+}
+
+loadPlatforms();
+</script>
+
+</body>
+</html>

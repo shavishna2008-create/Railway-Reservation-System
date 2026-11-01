@@ -1,0 +1,509 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Allocation | Payanam Junction</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .action-cell {
+            min-width: 110px;
+        }
+
+        .cancel-button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cancel-button:hover {
+            background: #b02a37;
+        }
+
+        .cancel-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .cancelled-label {
+            color: #777;
+            font-weight: bold;
+        }
+
+        .notice {
+            margin: 10px 0;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="logo">🚆</div>
+        <div>
+            <h2>Payanam Junction</h2>
+            <p>Railway Management System</p>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <h3>MAIN MENU</h3>
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="trains.html">🚆 Train Services</a>
+        <a href="reservations.html">🎫 Reservations</a>
+        <a href="platforms.html">🚉 Platforms</a>
+        <a href="allocation.html" class="active">📍 Platform Allocation</a>
+        <a href="activity.html">📋 Activity Log</a>
+    </aside>
+
+    <main>
+        <h1 class="page-title">Platform Allocation</h1>
+        <p class="page-subtitle">
+            Manage train platforms manually or automatically.
+        </p>
+
+        <section class="stats">
+            <div class="stat">
+                <h3>Platforms</h3>
+                <h2 id="platformCount">0</h2>
+            </div>
+            <div class="stat">
+                <h3>Scheduled Trains</h3>
+                <h2 id="trainCount">0</h2>
+            </div>
+            <div class="stat">
+                <h3>Assigned</h3>
+                <h2 id="assignedCount">0</h2>
+            </div>
+            <div class="stat">
+                <h3>Pending</h3>
+                <h2 id="pendingCount">0</h2>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Manual Platform Allocation</h2>
+            <p class="page-subtitle">
+                Select a train and platform. The system validates
+                platform length and time conflicts before allocation.
+            </p>
+
+            <form id="manualAllocationForm">
+                <div class="form-group">
+                    <label for="trainSelect">Select Train</label>
+                    <select id="trainSelect" required>
+                        <option value="">Loading trains...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="platformSelect">Select Platform</label>
+                    <select id="platformSelect" required>
+                        <option value="">Loading platforms...</option>
+                    </select>
+                </div>
+
+                <p id="manualMessage" role="status"
+                   class="page-subtitle notice"></p>
+
+                <button type="submit" id="manualAllocateButton">
+                    Allocate Platform
+                </button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Allocation Schedule</h2>
+
+            <p id="message" class="page-subtitle notice" role="status">
+                Loading allocation records...
+            </p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Train</th>
+                            <th>Arrival</th>
+                            <th>Departure</th>
+                            <th>Train Length</th>
+                            <th>Platform</th>
+                            <th>Platform Length</th>
+                            <th>Clearance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allocationTableBody"></tbody>
+                </table>
+            </div>
+
+            <button type="button" id="allocateButton">
+                Run Automatic Allocation
+            </button>
+        </section>
+
+        <section class="card">
+            <h2>Allocation Rules</h2>
+            <ul>
+                <li>Train length must not exceed platform length.</li>
+                <li>A platform cannot host trains during overlapping occupation intervals.</li>
+                <li>Occupation continues until departure plus the clearance buffer.</li>
+                <li>Automatic allocation considers trains in scheduled arrival order.</li>
+                <li>Trains without a suitable platform remain pending.</li>
+                <li>Cancelled allocations remain in the history.</li>
+            </ul>
+        </section>
+
+        <footer>
+            Payanam Junction Railway Reservation System
+        </footer>
+    </main>
+</div>
+
+<script>
+const tableBody = document.getElementById("allocationTableBody");
+const message = document.getElementById("message");
+const allocateButton = document.getElementById("allocateButton");
+const trainSelect = document.getElementById("trainSelect");
+const platformSelect = document.getElementById("platformSelect");
+const manualForm = document.getElementById("manualAllocationForm");
+const manualMessage = document.getElementById("manualMessage");
+const manualButton = document.getElementById("manualAllocateButton");
+
+let trains = [];
+let platforms = [];
+
+function formatTime(value) {
+    if (!value) return "-";
+
+    const match = String(value).match(/T(\d{2}):(\d{2})/);
+    if (match) return match[1] + ":" + match[2];
+
+    const timeMatch = String(value).match(/^(\d{2}):(\d{2})/);
+    if (timeMatch) return timeMatch[1] + ":" + timeMatch[2];
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+
+    return date.toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+    });
+}
+
+function addCell(row, value) {
+    const cell = document.createElement("td");
+    cell.textContent = value ?? "-";
+    row.appendChild(cell);
+    return cell;
+}
+
+async function loadOptions() {
+    try {
+        const [trainResponse, platformResponse] = await Promise.all([
+            fetch("/api/trains"),
+            fetch("/api/platforms")
+        ]);
+
+        if (!trainResponse.ok || !platformResponse.ok) {
+            throw new Error("Could not load trains or platforms.");
+        }
+
+        trains = await trainResponse.json();
+        platforms = await platformResponse.json();
+
+        trainSelect.replaceChildren();
+        platformSelect.replaceChildren();
+
+        const trainPlaceholder = document.createElement("option");
+        trainPlaceholder.value = "";
+        trainPlaceholder.textContent = "Choose a train";
+        trainSelect.appendChild(trainPlaceholder);
+
+        trains.forEach(train => {
+            const option = document.createElement("option");
+            option.value = train.id;
+            option.textContent =
+                train.train_number + " - " + train.train_name +
+                " (" + train.platform_length_required + " m)";
+            trainSelect.appendChild(option);
+        });
+
+        const platformPlaceholder = document.createElement("option");
+        platformPlaceholder.value = "";
+        platformPlaceholder.textContent = "Choose a platform";
+        platformSelect.appendChild(platformPlaceholder);
+
+        platforms.forEach(platform => {
+            const option = document.createElement("option");
+            option.value = platform.id;
+            option.textContent =
+                "Platform " + platform.platform_number +
+                " (" + platform.platform_length + " m)";
+            platformSelect.appendChild(option);
+        });
+
+        document.getElementById("platformCount").textContent =
+            platforms.length;
+        document.getElementById("trainCount").textContent =
+            trains.length;
+
+    } catch (error) {
+        trainSelect.replaceChildren();
+        platformSelect.replaceChildren();
+
+        manualMessage.textContent =
+            "Could not load dropdowns. Check the backend and database.";
+
+        console.error(error);
+    }
+}
+
+async function loadAllocations() {
+    message.textContent = "Loading allocation records...";
+
+    try {
+        const response = await fetch("/api/allocations");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const allocations = await response.json();
+        tableBody.replaceChildren();
+
+        allocations.forEach(item => {
+            const row = document.createElement("tr");
+
+            addCell(row, item.trainNumber + " — " + item.trainName);
+            addCell(row, formatTime(item.arrivalTime));
+            addCell(row, formatTime(item.departureTime));
+            addCell(row, item.trainLength + " m");
+            addCell(row, "Platform " + item.platformNumber);
+            addCell(row, item.platformLength + " m");
+            addCell(row, item.clearanceMinutes + " minutes");
+
+            const statusCell = document.createElement("td");
+            const badge = document.createElement("span");
+
+            badge.className = "status " +
+                (item.status === "ALLOCATED"
+                    ? "status-green"
+                    : "status-orange");
+
+            badge.textContent = item.status;
+            statusCell.appendChild(badge);
+            row.appendChild(statusCell);
+
+            const actionCell = document.createElement("td");
+            actionCell.className = "action-cell";
+
+            if (item.status === "ALLOCATED") {
+                const cancelButton = document.createElement("button");
+
+                cancelButton.type = "button";
+                cancelButton.className = "cancel-button";
+                cancelButton.textContent = "Cancel";
+
+                cancelButton.addEventListener("click", () => {
+                    cancelAllocation(item.id, item.trainNumber, cancelButton);
+                });
+
+                actionCell.appendChild(cancelButton);
+            } else {
+                const label = document.createElement("span");
+                label.className = "cancelled-label";
+                label.textContent = "No action";
+                actionCell.appendChild(label);
+            }
+
+            row.appendChild(actionCell);
+            tableBody.appendChild(row);
+        });
+
+        const assigned = allocations.filter(
+            item => item.status === "ALLOCATED"
+        ).length;
+
+        document.getElementById("assignedCount").textContent = assigned;
+
+        // This API does not currently return pending trains as a separate list.
+        document.getElementById("pendingCount").textContent = "—";
+
+        message.textContent = allocations.length
+            ? "Allocation records loaded successfully."
+            : "No allocation records found. You can run automatic allocation.";
+
+    } catch (error) {
+        message.textContent =
+            "Unable to load allocations. Check whether the backend is running.";
+        console.error(error);
+    }
+}
+
+async function cancelAllocation(id, trainNumber, button) {
+    const confirmed = confirm(
+        "Cancel the platform allocation for train " + trainNumber + "?"
+    );
+
+    if (!confirmed) return;
+
+    button.disabled = true;
+    button.textContent = "Cancelling...";
+    message.textContent = "Cancelling allocation...";
+
+    try {
+        const response = await fetch(
+            "/api/allocations/" + encodeURIComponent(id) + "/cancel",
+            { method: "POST" }
+        );
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(
+                result.message || "Could not cancel allocation."
+            );
+        }
+
+        message.textContent =
+            result.message || "Allocation cancelled successfully.";
+
+        await loadAllocations();
+
+    } catch (error) {
+        message.textContent = error.message;
+        console.error(error);
+        button.disabled = false;
+        button.textContent = "Cancel";
+    }
+}
+
+manualForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const trainId = trainSelect.value;
+    const platformId = platformSelect.value;
+
+    if (!trainId || !platformId) {
+        manualMessage.textContent =
+            "Please select both train and platform.";
+        return;
+    }
+
+    const selectedTrain = trains.find(
+        train => String(train.id) === String(trainId)
+    );
+
+    const selectedPlatform = platforms.find(
+        platform => String(platform.id) === String(platformId)
+    );
+
+    if (!selectedTrain || !selectedPlatform) {
+        manualMessage.textContent =
+            "Invalid train or platform selection.";
+        return;
+    }
+
+    if (
+        Number(selectedTrain.platform_length_required) >
+        Number(selectedPlatform.platform_length)
+    ) {
+        manualMessage.textContent =
+            "Cannot allocate: this train is longer than the selected platform.";
+        return;
+    }
+
+    manualButton.disabled = true;
+    manualButton.textContent = "Allocating...";
+    manualMessage.textContent = "Sending allocation request...";
+
+    try {
+        const response = await fetch("/api/allocations/manual", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                trainId: Number(trainId),
+                platformId: Number(platformId)
+            })
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(
+                result.message || result.error ||
+                "Manual allocation failed. HTTP " + response.status
+            );
+        }
+
+        manualMessage.textContent =
+            result.message || "Platform allocated successfully.";
+
+        await loadAllocations();
+
+    } catch (error) {
+        manualMessage.textContent = error.message;
+        console.error(error);
+    } finally {
+        manualButton.disabled = false;
+        manualButton.textContent = "Allocate Platform";
+    }
+});
+
+allocateButton.addEventListener("click", async () => {
+    allocateButton.disabled = true;
+    allocateButton.textContent = "Allocating...";
+    message.textContent = "Running automatic allocation...";
+
+    try {
+        const response = await fetch("/api/allocations/auto", {
+            method: "POST"
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(
+                result.message || "Automatic allocation failed."
+            );
+        }
+
+        await loadAllocations();
+
+        const details = Array.isArray(result.messages)
+            ? result.messages.join("\n")
+            : "";
+
+        alert(
+            "Newly allocated: " + result.newlyAllocated +
+            "\nPending: " + result.pending +
+            (details ? "\n\n" + details : "")
+        );
+
+    } catch (error) {
+        message.textContent = error.message;
+        console.error(error);
+        alert(error.message || "Check the Spring Boot terminal.");
+    } finally {
+        allocateButton.disabled = false;
+        allocateButton.textContent = "Run Automatic Allocation";
+    }
+});
+
+loadOptions();
+loadAllocations();
+</script>
+
+</body>
+</html>

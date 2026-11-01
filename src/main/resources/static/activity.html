@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Log | Payanam Junction</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="logo">🚆</div>
+        <div>
+            <h2>Payanam Junction</h2>
+            <p>Railway Management System</p>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">
+        <h3>MAIN MENU</h3>
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="trains.html">🚆 Train Services</a>
+        <a href="reservations.html">🎫 Reservations</a>
+        <a href="platforms.html">🚉 Platforms</a>
+        <a href="allocation.html">📍 Platform Allocation</a>
+        <a href="activity.html" class="active">📋 Activity Log</a>
+    </aside>
+
+    <main>
+        <h1 class="page-title">Activity Log</h1>
+        <p class="page-subtitle">
+            View railway reservation and platform activities recorded in the database.
+        </p>
+
+        <section class="stats">
+            <div class="stat">
+                <h3>Total Events</h3>
+                <h2 id="totalEvents">0</h2>
+            </div>
+            <div class="stat">
+                <h3>Bookings</h3>
+                <h2 id="bookings">0</h2>
+            </div>
+            <div class="stat">
+                <h3>Allocations</h3>
+                <h2 id="allocations">0</h2>
+            </div>
+            <div class="stat">
+                <h3>Cancellations</h3>
+                <h2 id="cancellations">0</h2>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Recent Events</h2>
+
+            <p id="message">Loading activities...</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event ID</th>
+                            <th>Activity</th>
+                            <th>Details</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityTable"></tbody>
+                </table>
+            </div>
+
+            <p class="note">
+                Activity records are loaded from the railway database.
+            </p>
+        </section>
+
+        <footer>
+            Payanam Junction Railway Reservation System
+        </footer>
+    </main>
+</div>
+
+<script>
+    const tableBody = document.getElementById("activityTable");
+    const message = document.getElementById("message");
+
+    function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>"']/g, function (char) {
+            return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            }[char];
+        });
+    }
+
+    function formatDateTime(value) {
+        if (!value) return "-";
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return escapeHTML(value);
+        }
+
+        return date.toLocaleString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        });
+    }
+
+    // Classify activities without confusing cancellations with bookings.
+    function getActivityCategory(activity) {
+        const type = String(activity.activityType || "")
+            .trim()
+            .toLowerCase();
+
+        if (type.includes("cancel")) {
+            return "cancellation";
+        }
+
+        if (type.includes("allocat") || type.includes("platform")) {
+            return "allocation";
+        }
+
+        if (type === "reservation booking" || type === "booking") {
+            return "booking";
+        }
+
+        return "other";
+    }
+
+    function getStatusClass(status) {
+        const value = String(status || "").toLowerCase();
+
+        if (
+            value === "recorded" ||
+            value === "success" ||
+            value === "confirmed" ||
+            value === "allocated"
+        ) {
+            return "status-green";
+        }
+
+        if (
+            value === "waiting" ||
+            value === "pending" ||
+            value === "cancelled" ||
+            value === "failed"
+        ) {
+            return "status-orange";
+        }
+
+        return "status-green";
+    }
+
+    async function loadActivities() {
+        message.textContent = "Loading activities...";
+        tableBody.innerHTML = "";
+
+        try {
+            const response = await fetch("/api/activities");
+
+            if (!response.ok) {
+                throw new Error("Server returned status " + response.status);
+            }
+
+            const activities = await response.json();
+
+            // Update summary statistics.
+            document.getElementById("totalEvents").textContent =
+                activities.length;
+
+            document.getElementById("bookings").textContent =
+                activities.filter(activity =>
+                    getActivityCategory(activity) === "booking"
+                ).length;
+
+            document.getElementById("allocations").textContent =
+                activities.filter(activity =>
+                    getActivityCategory(activity) === "allocation"
+                ).length;
+
+            document.getElementById("cancellations").textContent =
+                activities.filter(activity =>
+                    getActivityCategory(activity) === "cancellation"
+                ).length;
+
+            if (activities.length === 0) {
+                message.textContent =
+                    "No activity records found. Database-la records add pannina inga display aagum.";
+                return;
+            }
+
+            message.textContent =
+                activities.length + " activity record(s) found.";
+
+            tableBody.innerHTML = activities.map(activity => `
+                <tr>
+                    <td>${formatDateTime(activity.createdAt)}</td>
+                    <td>EV${String(activity.id).padStart(3, "0")}</td>
+                    <td>${escapeHTML(activity.activityType)}</td>
+                    <td>${escapeHTML(activity.details)}</td>
+                    <td>
+                        <span class="status ${getStatusClass(activity.status)}">
+                            ${escapeHTML(activity.status)}
+                        </span>
+                    </td>
+                </tr>
+            `).join("");
+
+        } catch (error) {
+            console.error("Error loading activities:", error);
+            message.textContent =
+                "Activities load aagala. Spring Boot running-la irukka nu check pannunga.";
+        }
+    }
+
+    loadActivities();
+</script>
+
+</body>
+</html>

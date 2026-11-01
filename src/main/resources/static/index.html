@@ -1,0 +1,1253 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payanam Junction | Home</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f7fc;
+            color: #142849;
+        }
+
+        /* NAVBAR */
+        .topbar {
+            background: #102747;
+            color: white;
+            padding: 17px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-icon { font-size: 38px; }
+        .brand h2 { margin: 0; font-size: 23px; }
+        .brand p { margin: 4px 0 0; font-size: 12px; color: #cbd8eb; }
+
+        .menu { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+
+        .menu a {
+            color: #e5edf9;
+            text-decoration: none;
+            padding: 11px 13px;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.25s;
+        }
+
+        .menu a:hover, .menu a.active {
+            background: #2462b8;
+            color: white;
+        }
+
+        /* NOTIFICATION BELL */
+        .notification-container {
+            position: relative;
+            margin-left: 5px;
+        }
+
+        .notification-bell {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border: 1px solid #56708f;
+            border-radius: 12px;
+            background: #1a3b64;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .notification-bell:hover {
+            background: #2462b8;
+            transform: translateY(-2px);
+        }
+
+        .notification-count {
+            position: absolute;
+            top: -7px;
+            right: -7px;
+            min-width: 21px;
+            height: 21px;
+            padding: 2px 5px;
+            border-radius: 50px;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #102747;
+        }
+
+        .notification-count:empty,
+        .notification-count.hidden {
+            display: none;
+        }
+
+        /* NOTIFICATION DROPDOWN */
+        .notification-dropdown {
+            position: absolute;
+            top: 54px;
+            right: 0;
+            width: 380px;
+            max-width: calc(100vw - 30px);
+            background: white;
+            color: #142849;
+            border-radius: 14px;
+            box-shadow: 0 12px 35px #071b3540;
+            border: 1px solid #e1e8f2;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .notification-dropdown[hidden] {
+            display: none;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f7faff;
+            border-bottom: 1px solid #e5ebf4;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 17px;
+        }
+
+        .notification-refresh {
+            border: none;
+            background: #e6f0ff;
+            color: #1755a5;
+            padding: 7px 10px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .notification-refresh:hover {
+            background: #d4e5ff;
+        }
+
+        .notification-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid #edf1f7;
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: #eef5ff;
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+            display: grid;
+            place-items: center;
+            background: #dceaff;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-message {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .notification-time {
+            margin-top: 5px;
+            font-size: 11px;
+            color: #77869b;
+        }
+
+        .notification-status {
+            margin-top: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .notification-status.unread-status {
+            color: #2563eb;
+        }
+
+        .notification-status.read-status {
+            color: #15803d;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .notification-actions button {
+            border: none;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .mark-read-btn {
+            background: #dceaff;
+            color: #1755a5;
+        }
+
+        .mark-read-btn:hover {
+            background: #c6ddff;
+        }
+
+        .dismiss-btn {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .dismiss-btn:hover {
+            background: #fecaca;
+        }
+
+        .notification-actions button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .notification-empty {
+            text-align: center;
+            padding: 28px 15px;
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .notification-error {
+            color: #c62828;
+        }
+
+        /* HERO */
+        .hero {
+            min-height: 405px;
+            padding: 65px 7%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 35px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 82% 45%, #3c75ad 0, transparent 28%),
+                linear-gradient(120deg, #102747, #174675 65%, #367bb2);
+            color: white;
+        }
+
+        .hero-content { max-width: 680px; }
+
+        .eyebrow {
+            color: #8dc9ff;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: clamp(38px, 5vw, 64px);
+            line-height: 1.08;
+            margin: 18px 0;
+        }
+
+        .hero h2 {
+            font-size: 25px;
+            color: #8dc9ff;
+            margin: 0 0 16px;
+        }
+
+        .hero p {
+            max-width: 590px;
+            line-height: 1.8;
+            color: #e1eaf7;
+            font-size: 16px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 13px;
+            flex-wrap: wrap;
+            margin-top: 27px;
+        }
+
+        .btn {
+            display: inline-block;
+            text-decoration: none;
+            padding: 13px 21px;
+            border-radius: 10px;
+            font-weight: 700;
+            transition: 0.25s;
+        }
+
+        .btn-primary {
+            background: #378cff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #176edb;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 1px solid #c4d8f4;
+            color: white;
+        }
+
+        .btn-outline:hover {
+            background: #ffffff18;
+        }
+
+        .train-art {
+            min-width: 230px;
+            text-align: center;
+            font-size: clamp(100px, 15vw, 185px);
+            filter: drop-shadow(0 18px 22px #06162b55);
+        }
+
+        /* SERVICE CARDS */
+        .section {
+            padding: 38px 5% 0;
+        }
+
+        .section-heading {
+            margin-bottom: 22px;
+        }
+
+        .section-heading h2 {
+            font-size: 27px;
+            margin: 0 0 8px;
+        }
+
+        .section-heading p {
+            margin: 0;
+            color: #687a96;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 17px;
+        }
+
+        .feature {
+            background: white;
+            padding: 23px 20px;
+            border: 1px solid #e4ebf5;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px #203f6810;
+            text-decoration: none;
+            color: #142849;
+            transition: 0.25s;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px #203f681c;
+            border-color: #b8d5fa;
+        }
+
+        .feature-icon {
+            width: 51px;
+            height: 51px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: #e6f0ff;
+            font-size: 25px;
+            margin-bottom: 18px;
+        }
+
+        .feature h3 {
+            font-size: 17px;
+            margin: 0 0 10px;
+        }
+
+        .feature p {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #687a96;
+            margin: 0 0 14px;
+        }
+
+        .feature .arrow {
+            color: #236bce;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* DASHBOARD STATISTICS */
+        .info-strip {
+            margin: 28px 5% 38px;
+            background: #e4efff;
+            border-radius: 15px;
+            padding: 23px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 13px;
+        }
+
+        .info-icon { font-size: 30px; }
+
+        .info-item strong {
+            display: block;
+            font-size: 23px;
+            color: #174e9b;
+        }
+
+        .info-item span {
+            color: #657a99;
+            font-size: 12px;
+        }
+
+        /* FOOTER */
+        footer {
+            background: #102747;
+            color: #d5e0ef;
+            padding: 22px 5%;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 1150px) {
+            .features {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .topbar {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .features {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .hero {
+                padding: 45px 6%;
+            }
+
+            .train-art {
+                min-width: 130px;
+                font-size: 100px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .topbar {
+                padding: 17px 4%;
+            }
+
+            .brand h2 {
+                font-size: 20px;
+            }
+
+            .menu {
+                justify-content: center;
+            }
+
+            .menu a {
+                font-size: 12px;
+                padding: 9px;
+            }
+
+            .notification-container {
+                margin: 8px auto 0;
+            }
+
+            .notification-dropdown {
+                right: -10px;
+            }
+
+            .hero {
+                padding: 40px 6%;
+            }
+
+            .hero h2 {
+                font-size: 21px;
+            }
+
+            .train-art {
+                display: none;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .info-strip {
+                grid-template-columns: repeat(2, 1fr);
+                margin-left: 4%;
+                margin-right: 4%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVIGATION BAR -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">🚆</div>
+            <div>
+                <h2>Payanam Junction</h2>
+                <p>Railway Reservation &amp; Platform Allocation</p>
+            </div>
+        </div>
+
+        <nav class="menu">
+            <a href="index.html" class="active">⌂ Home</a>
+            <a href="trains.html">🚆 Train Services</a>
+            <a href="reservations.html">🎫 Reservations</a>
+            <a href="platforms.html">🚉 Platforms</a>
+            <a href="allocation.html">📍 Allocation</a>
+            <a href="activity.html">📋 Activity Log</a>
+
+            <div class="notification-container">
+
+                <button type="button"
+                        id="notificationBell"
+                        class="notification-bell"
+                        aria-label="Open notifications"
+                        aria-expanded="false"
+                        aria-controls="notificationDropdown"
+                        onclick="toggleNotifications()">
+                    🔔
+                    <span id="notificationCount"
+                          class="notification-count hidden">0</span>
+                </button>
+
+                <div id="notificationDropdown"
+                     class="notification-dropdown"
+                     hidden>
+
+                    <div class="notification-header">
+                        <h3>Notifications</h3>
+
+                        <button type="button"
+                                class="notification-refresh"
+                                onclick="loadNotifications()">
+                            ↻ Refresh
+                        </button>
+                    </div>
+
+                    <div id="notificationList" class="notification-list">
+                        <p class="notification-empty">
+                            Click the bell to load notifications.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="eyebrow">Welcome to Payanam Junction</div>
+
+            <h1>Your Journey,<br>Our Priority.</h1>
+
+            <h2>Smart Railway Management System</h2>
+
+            <p>
+                Welcome to Payanam Junction, a railway management project
+                designed to organize train schedules, passenger reservations
+                and platform allocation in one place. Our goal is to make
+                railway operations smoother, safer and more efficient.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="trains.html" class="btn btn-primary">
+                    Explore Services →
+                </a>
+
+                <a href="allocation.html" class="btn btn-outline">
+                    View Platform Allocation
+                </a>
+            </div>
+        </div>
+
+        <div class="train-art" aria-label="Train illustration">🚆</div>
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section class="section">
+        <div class="section-heading">
+            <h2>Explore Our Services</h2>
+            <p>Choose a menu to explore the railway management system.</p>
+        </div>
+
+        <div class="features">
+
+            <a href="trains.html" class="feature">
+                <div class="feature-icon">🚆</div>
+                <h3>Train Services</h3>
+                <p>View train names, schedules, train lengths and seat capacity.</p>
+                <span class="arrow">Explore →</span>
+            </a>
+
+            <a href="reservations.html" class="feature">
+                <div class="feature-icon">🎫</div>
+                <h3>Reservations</h3>
+                <p>View passenger bookings, confirmed seats and waiting lists.</p>
+                <span class="arrow">Explore →</span>
+            </a>
+
+            <a href="platforms.html" class="feature">
+                <div class="feature-icon">🚉</div>
+                <h3>Platforms</h3>
+                <p>Check platform lengths, capacity and availability information.</p>
+                <span class="arrow">Explore →</span>
+            </a>
+
+            <a href="allocation.html" class="feature">
+                <div class="feature-icon">📍</div>
+                <h3>Platform Allocation</h3>
+                <p>Review train assignments and platform scheduling rules.</p>
+                <span class="arrow">Explore →</span>
+            </a>
+
+            <a href="activity.html" class="feature">
+                <div class="feature-icon">📋</div>
+                <h3>Activity Log</h3>
+                <p>Review booking, cancellation and allocation events.</p>
+                <span class="arrow">Explore →</span>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- DASHBOARD STATISTICS -->
+    <section class="info-strip">
+
+        <div class="info-item">
+            <div class="info-icon">🚆</div>
+            <div>
+                <strong id="trainCount">0</strong>
+                <span>Train Services</span>
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-icon">🎫</div>
+            <div>
+                <strong id="bookingCount">0</strong>
+                <span>Booking Requests</span>
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-icon">🚉</div>
+            <div>
+                <strong id="platformCount">0</strong>
+                <span>Platforms</span>
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div>
+                <strong>PJ-01</strong>
+                <span>Payanam Junction</span>
+            </div>
+        </div>
+
+    </section>
+
+    <footer>
+        © 2026 Payanam Junction |
+        Railway Reservation &amp; Platform Allocation System
+    </footer>
+
+    <script>
+        /* =====================================
+           LOAD DASHBOARD STATISTICS
+        ===================================== */
+
+        async function loadDashboardStats() {
+            try {
+                const [
+                    trainsResponse,
+                    reservationsResponse,
+                    platformsResponse
+                ] = await Promise.all([
+                    fetch("/api/trains"),
+                    fetch("/api/reservations"),
+                    fetch("/api/platforms")
+                ]);
+
+                if (
+                    !trainsResponse.ok ||
+                    !reservationsResponse.ok ||
+                    !platformsResponse.ok
+                ) {
+                    throw new Error("Could not load dashboard statistics");
+                }
+
+                const trains = await trainsResponse.json();
+                const reservations = await reservationsResponse.json();
+                const platforms = await platformsResponse.json();
+
+                document.getElementById("trainCount").textContent =
+                    Array.isArray(trains) ? trains.length : 0;
+
+                document.getElementById("bookingCount").textContent =
+                    Array.isArray(reservations) ? reservations.length : 0;
+
+                document.getElementById("platformCount").textContent =
+                    Array.isArray(platforms) ? platforms.length : 0;
+
+            } catch (error) {
+                console.error("Dashboard statistics error:", error);
+            }
+        }
+
+
+        /* =====================================
+           OPEN OR CLOSE NOTIFICATION DROPDOWN
+        ===================================== */
+
+        function toggleNotifications() {
+            const dropdown =
+                document.getElementById("notificationDropdown");
+
+            const bell =
+                document.getElementById("notificationBell");
+
+            const isOpening = dropdown.hidden;
+
+            dropdown.hidden = !isOpening;
+
+            bell.setAttribute("aria-expanded", String(isOpening));
+
+            if (isOpening) {
+                loadNotifications();
+            }
+        }
+
+
+        /* =====================================
+           CHECK WHETHER NOTIFICATION IS UNREAD
+        ===================================== */
+
+        function isNotificationUnread(item) {
+            const value = item.isRead ?? item.is_read ?? item.read;
+
+            if (
+                value === true ||
+                value === 1 ||
+                value === "1"
+            ) {
+                return false;
+            }
+
+            if (
+                value === false ||
+                value === 0 ||
+                value === "0" ||
+                value === "false" ||
+                value == null
+            ) {
+                return true;
+            }
+
+            return String(value).toLowerCase() !== "true";
+        }
+
+
+        /* =====================================
+           LOAD NOTIFICATIONS
+        ===================================== */
+
+        async function loadNotifications() {
+            const list =
+                document.getElementById("notificationList");
+
+            const count =
+                document.getElementById("notificationCount");
+
+            try {
+                const response = await fetch("/api/notifications", {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    },
+                    cache: "no-store"
+                });
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Unable to fetch notifications. HTTP " + response.status
+                    );
+                }
+
+                const result = await response.json();
+
+                const notifications = Array.isArray(result)
+                    ? result
+                    : (
+                        Array.isArray(result.notifications)
+                            ? result.notifications
+                            : []
+                    );
+
+                // Calculate unread notifications.
+                const unreadCount = notifications.filter(
+                    isNotificationUnread
+                ).length;
+
+                // Update bell count.
+                count.textContent =
+                    unreadCount > 99 ? "99+" : String(unreadCount);
+
+                count.classList.toggle(
+                    "hidden",
+                    unreadCount === 0
+                );
+
+                count.setAttribute(
+                    "aria-label",
+                    unreadCount + " unread notifications"
+                );
+
+                // Clear previous notification list.
+                list.replaceChildren();
+
+                if (notifications.length === 0) {
+                    const empty = document.createElement("p");
+
+                    empty.className = "notification-empty";
+                    empty.textContent = "No notifications yet.";
+
+                    list.appendChild(empty);
+                    return;
+                }
+
+                // Latest notifications first.
+                notifications.sort(function (a, b) {
+                    return Number(b.id || 0) - Number(a.id || 0);
+                });
+
+                notifications.forEach(function (item) {
+
+                    const unread = isNotificationUnread(item);
+
+                    // Notification card.
+                    const card = document.createElement("div");
+
+                    card.className =
+                        "notification-item" +
+                        (unread ? " unread" : "");
+
+                    // Icon.
+                    const icon = document.createElement("div");
+
+                    icon.className = "notification-icon";
+                    icon.setAttribute("aria-hidden", "true");
+                    icon.textContent = getNotificationIcon(item);
+
+                    // Content container.
+                    const content = document.createElement("div");
+
+                    content.className = "notification-content";
+
+                    // Notification message.
+                    const message = document.createElement("p");
+
+                    message.className = "notification-message";
+
+                    message.textContent =
+                        item.message || "You have a new notification.";
+
+                    // Notification time.
+                    const time = document.createElement("div");
+
+                    time.className = "notification-time";
+
+                    time.textContent = formatNotificationTime(
+                        item.createdAt ||
+                        item.created_at ||
+                        item.timestamp
+                    );
+
+                    // Read / unread status.
+                    const status = document.createElement("div");
+
+                    status.className = "notification-status";
+
+                    if (unread) {
+                        status.classList.add("unread-status");
+                        status.textContent = "● Unread";
+                    } else {
+                        status.classList.add("read-status");
+                        status.textContent = "✓ Read";
+                    }
+
+                    content.appendChild(message);
+
+                    if (time.textContent) {
+                        content.appendChild(time);
+                    }
+
+                    content.appendChild(status);
+
+                    // Action buttons container.
+                    const actions = document.createElement("div");
+
+                    actions.className = "notification-actions";
+
+                    // Mark as Read button.
+                    if (unread) {
+                        const readButton =
+                            document.createElement("button");
+
+                        readButton.type = "button";
+                        readButton.className = "mark-read-btn";
+                        readButton.textContent = "Mark as Read";
+
+                        readButton.addEventListener("click", function () {
+                            markNotificationAsRead(
+                                item.id,
+                                readButton
+                            );
+                        });
+
+                        actions.appendChild(readButton);
+                    }
+
+                    // Dismiss button.
+                    const dismissButton =
+                        document.createElement("button");
+
+                    dismissButton.type = "button";
+                    dismissButton.className = "dismiss-btn";
+                    dismissButton.textContent = "Dismiss";
+
+                    dismissButton.addEventListener("click", function () {
+                        dismissNotification(
+                            item.id,
+                            dismissButton
+                        );
+                    });
+
+                    actions.appendChild(dismissButton);
+
+                    content.appendChild(actions);
+
+                    card.appendChild(icon);
+                    card.appendChild(content);
+
+                    list.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error("Notification loading error:", error);
+
+                list.replaceChildren();
+
+                const errorMessage =
+                    document.createElement("p");
+
+                errorMessage.className =
+                    "notification-empty notification-error";
+
+                errorMessage.textContent =
+                    "Could not load notifications. Check the server and try Refresh.";
+
+                list.appendChild(errorMessage);
+            }
+        }
+
+
+        /* =====================================
+           MARK NOTIFICATION AS READ
+        ===================================== */
+
+        async function markNotificationAsRead(id, button) {
+            if (button) {
+                button.disabled = true;
+                button.textContent = "Updating...";
+            }
+
+            try {
+                const response = await fetch(
+                    "/api/notifications/" +
+                    encodeURIComponent(id) +
+                    "/read",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Read update failed. HTTP " + response.status
+                    );
+                }
+
+                const result = await response.json();
+
+                if (result.success === false) {
+                    throw new Error(
+                        result.message || "Read update failed"
+                    );
+                }
+
+                // Reload list and unread count.
+                await loadNotifications();
+
+            } catch (error) {
+                console.error("Mark as read error:", error);
+
+                alert(
+                    "Could not mark notification as read. Please try again."
+                );
+
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = "Mark as Read";
+                }
+            }
+        }
+
+
+        /* =====================================
+           DISMISS NOTIFICATION
+        ===================================== */
+
+        async function dismissNotification(id, button) {
+
+            const confirmed = confirm(
+                "Do you want to dismiss this notification?"
+            );
+
+            if (!confirmed) {
+                return;
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = "Removing...";
+            }
+
+            try {
+                const response = await fetch(
+                    "/api/notifications/" +
+                    encodeURIComponent(id),
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Dismiss failed. HTTP " + response.status
+                    );
+                }
+
+                const result = await response.json();
+
+                if (result.success === false) {
+                    throw new Error(
+                        result.message || "Dismiss failed"
+                    );
+                }
+
+                // Reload notifications after deletion.
+                await loadNotifications();
+
+            } catch (error) {
+                console.error("Dismiss notification error:", error);
+
+                alert(
+                    "Could not dismiss notification. Please try again."
+                );
+
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = "Dismiss";
+                }
+            }
+        }
+
+
+        /* =====================================
+           CHOOSE ICON BASED ON NOTIFICATION TYPE
+        ===================================== */
+
+        function getNotificationIcon(notification) {
+
+            const type = String(
+                notification.type ||
+                notification.notificationType ||
+                notification.notification_type ||
+                ""
+            ).toUpperCase();
+
+            const message = String(
+                notification.message || ""
+            ).toLowerCase();
+
+            if (
+                type.includes("CANCEL") ||
+                message.includes("cancel")
+            ) {
+                return "❌";
+            }
+
+            if (
+                type.includes("WAIT") ||
+                message.includes("waiting")
+            ) {
+                return "⏳";
+            }
+
+            if (
+                type.includes("CONFIRM") ||
+                message.includes("confirm") ||
+                message.includes("seat")
+            ) {
+                return "🎫";
+            }
+
+            return "📩";
+        }
+
+
+        /* =====================================
+           FORMAT NOTIFICATION DATE
+        ===================================== */
+
+        function formatNotificationTime(value) {
+
+            if (!value) {
+                return "";
+            }
+
+            const date = new Date(value);
+
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+
+            return date.toLocaleString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true
+            });
+        }
+
+
+        /* =====================================
+           CLOSE DROPDOWN WHEN CLICKING OUTSIDE
+        ===================================== */
+
+        document.addEventListener("click", function (event) {
+
+            const container =
+                document.querySelector(".notification-container");
+
+            const dropdown =
+                document.getElementById("notificationDropdown");
+
+            const bell =
+                document.getElementById("notificationBell");
+
+            if (
+                container &&
+                !container.contains(event.target) &&
+                !dropdown.hidden
+            ) {
+                dropdown.hidden = true;
+
+                bell.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        });
+
+
+        /* =====================================
+           INITIAL LOAD
+        ===================================== */
+
+        loadDashboardStats();
+
+        // Load notification count when dashboard opens.
+        loadNotifications();
+
+        // Refresh notification count every 30 seconds.
+        setInterval(function () {
+            loadNotifications();
+        }, 30000);
+
+    </script>
+
+</body>
+</html>

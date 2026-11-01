@@ -1,0 +1,1093 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payanam Junction | Train Services</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🚆</div>
+    <div>
+      <h1>Payanam Junction</h1>
+      <p>Railway Reservation &amp; Platform Allocation System</p>
+    </div>
+  </div>
+  <span>● TRAIN MANAGEMENT</span>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <h4>MAIN MENU</h4>
+    <a href="index.html">🏠 Dashboard</a>
+    <a href="trains.html" class="active">🚆 Train Services</a>
+    <a href="reservations.html">🎟️ Reservations</a>
+    <a href="platforms.html">🚉 Platforms</a>
+    <a href="allocation.html">⏱️ Platform Allocation</a>
+    <a href="activity.html">📋 Activity Log</a>
+  </aside>
+
+  <main>
+
+    <h2 class="page-title">Train Services 🚆</h2>
+    <p class="page-subtitle">
+      Live train details loaded from the database.
+    </p>
+
+    <!-- STATISTICS -->
+    <section class="stats">
+
+      <div class="stat">
+        <small>Total Services</small>
+        <h2 id="totalTrains">Loading...</h2>
+        <small>Registered trains</small>
+      </div>
+
+      <div class="stat">
+        <small>Seats per Train</small>
+        <h2>10</h2>
+        <small>Default capacity</small>
+      </div>
+
+      <div class="stat">
+        <small>Total Seat Capacity</small>
+        <h2 id="totalSeats">Loading...</h2>
+        <small>Across all services</small>
+      </div>
+
+      <div class="stat">
+        <small>Station</small>
+        <h2 style="font-size:22px">PYJ</h2>
+        <small>Payanam Junction</small>
+      </div>
+
+    </section>
+
+    <!-- TRAIN TABLE -->
+    <section class="card">
+
+      <h3>📋 Complete Train Timetable</h3>
+
+      <p id="message" role="status">Loading train details...</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Train No.</th>
+              <th>Train Name</th>
+              <th>Arrival</th>
+              <th>Departure</th>
+              <th>Train Length Required</th>
+              <th>Seat Capacity</th>
+              <th>Route</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="trainTableBody"></tbody>
+        </table>
+      </div>
+
+      <p class="note" style="margin-top:20px">
+        Train details are loaded from the railway_db database.
+        Train length is measured in metres.
+      </p>
+
+    </section>
+
+    <!-- ROUTE DETAILS -->
+    <section
+      class="card route-card-container"
+      id="routeDetailsCard"
+      style="display:none"
+      aria-live="polite"
+    >
+
+      <!-- ROUTE HEADER -->
+      <div class="route-header">
+
+        <div class="route-header-main">
+
+          <div class="route-header-icon">🛤️</div>
+
+          <div>
+            <div class="route-header-tags">
+              <span class="route-pill route-pill-train" id="routeTrainNumber">
+                Train #—
+              </span>
+
+              <span class="route-pill route-pill-type">
+                Express Service
+              </span>
+            </div>
+
+            <h3 id="routeTitle" class="route-main-title">
+              Train Route Timeline
+            </h3>
+
+            <p id="routeSubtitle" class="route-main-subtitle">
+              Station-by-station journey schedule
+            </p>
+          </div>
+
+        </div>
+
+        <div class="route-header-actions">
+
+          <div class="route-view-switcher" role="tablist">
+
+            <button
+              type="button"
+              class="view-tab active"
+              id="tabTimeline"
+              onclick="switchRouteView('timeline')"
+            >
+              📍 Timeline
+            </button>
+
+            <button
+              type="button"
+              class="view-tab"
+              id="tabTable"
+              onclick="switchRouteView('table')"
+            >
+              📋 Table
+            </button>
+
+          </div>
+
+          <button
+            type="button"
+            class="btn-close-route"
+            onclick="closeRoute()"
+          >
+            ✕ Close
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- LOADING / ERROR MESSAGE -->
+      <div id="routeMessage" class="route-status-msg" role="status"></div>
+
+      <div id="routeContent" class="route-body" style="display:none">
+
+        <!-- ROUTE SUMMARY -->
+        <div class="route-summary-panel">
+
+          <div class="route-summary-banner">
+
+            <div class="summary-path">
+
+              <div class="path-node path-origin">
+
+                <span class="path-badge start-badge">
+                  🟢 START
+                </span>
+
+                <span class="path-name" id="summaryOriginStation">
+                  —
+                </span>
+
+              </div>
+
+              <div class="path-track">
+                <div class="path-line"></div>
+                <div class="path-train-icon">🚆</div>
+
+                <span
+                  class="path-stops-count"
+                  id="summaryStopsCountBadge"
+                >
+                  0 Stations
+                </span>
+              </div>
+
+              <div class="path-node path-destination">
+
+                <span class="path-badge dest-badge">
+                  🏁 DESTINATION
+                </span>
+
+                <span class="path-name" id="summaryDestStation">
+                  —
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ROUTE STATISTICS -->
+          <div class="route-stats-grid">
+
+            <div class="route-stat-box">
+              <div class="stat-icon-wrapper">🚉</div>
+              <div>
+                <span class="stat-label">Total Stations</span>
+                <h4 class="stat-value" id="summaryTotalStations">0</h4>
+              </div>
+            </div>
+
+            <div class="route-stat-box">
+              <div class="stat-icon-wrapper">⏱️</div>
+              <div>
+                <span class="stat-label">Total Halt Time</span>
+                <h4 class="stat-value" id="summaryTotalHalt">0 mins</h4>
+              </div>
+            </div>
+
+            <div class="route-stat-box">
+              <div class="stat-icon-wrapper">🔄</div>
+              <div>
+                <span class="stat-label">Intermediate Stops</span>
+                <h4 class="stat-value" id="summaryIntermediateStops">0</h4>
+              </div>
+            </div>
+
+            <div class="route-stat-box">
+              <div class="stat-icon-wrapper">📍</div>
+              <div>
+                <span class="stat-label">Payanam Jxn (PYJ)</span>
+                <h4 class="stat-value" id="summaryPyjTiming">—</h4>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- TIMELINE VIEW -->
+        <div
+          class="journey-timeline-wrapper"
+          id="timelineView"
+        >
+          <div
+            class="journey-timeline"
+            id="timelineContainer"
+          ></div>
+        </div>
+
+        <!-- TABLE VIEW -->
+        <div
+          class="table-wrap route-table-wrapper"
+          id="tableView"
+          style="display:none"
+        >
+
+          <table class="route-detailed-table">
+
+            <thead>
+              <tr>
+                <th>Stop #</th>
+                <th>Type</th>
+                <th>Station Name</th>
+                <th>Arrival</th>
+                <th>Departure</th>
+                <th>Halt Duration</th>
+              </tr>
+            </thead>
+
+            <tbody id="routeTableBody"></tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+      <div class="route-footer-note">
+        <span class="info-icon">ℹ️</span>
+        <span>
+          Station sequence, arrival, departure, and halt times
+          are loaded directly from the database timetable.
+        </span>
+      </div>
+
+    </section>
+
+    <!-- SCHEDULING INFORMATION -->
+    <section class="card">
+
+      <h3>🧠 Scheduling Information</h3>
+
+      <div class="grid-two">
+
+        <div>
+          <p><b>Arrival time</b></p>
+          <p>Time when a train reaches Payanam Junction.</p>
+        </div>
+
+        <div>
+          <p><b>Departure time</b></p>
+          <p>Planned time when the train leaves the station.</p>
+        </div>
+
+        <div>
+          <p><b>Train length required</b></p>
+          <p>Used to check whether a platform is long enough.</p>
+        </div>
+
+        <div>
+          <p><b>Seat capacity</b></p>
+          <p>Maximum confirmed passengers per train.</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <footer>
+      Mini Project 16 · Railway Reservation and Platform Allocation System
+    </footer>
+
+  </main>
+
+</div>
+
+<script>
+
+// ========================================
+// 1. LOAD ALL TRAINS
+// ========================================
+
+async function loadTrains() {
+
+  const message = document.getElementById("message");
+  const tbody = document.getElementById("trainTableBody");
+
+  try {
+
+    const response = await fetch("/api/trains");
+
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    const trains = await response.json();
+
+    document.getElementById("totalTrains").textContent =
+      trains.length;
+
+    const totalSeats = trains.reduce(
+      (total, train) =>
+        total + Number(train.seat_capacity || 0),
+      0
+    );
+
+    document.getElementById("totalSeats").textContent =
+      totalSeats;
+
+    tbody.replaceChildren();
+
+    trains.forEach(train => {
+
+      const row = document.createElement("tr");
+
+      // TRAIN NUMBER
+      const numberCell = document.createElement("td");
+      const numberBold = document.createElement("b");
+
+      numberBold.textContent = train.train_number ?? "";
+
+      numberCell.appendChild(numberBold);
+      row.appendChild(numberCell);
+
+      // TRAIN NAME
+      const nameCell = document.createElement("td");
+      nameCell.textContent = train.train_name ?? "";
+      row.appendChild(nameCell);
+
+      // ARRIVAL
+      const arrivalCell = document.createElement("td");
+      arrivalCell.textContent = formatClock(train.arrival_time);
+      row.appendChild(arrivalCell);
+
+      // DEPARTURE
+      const departureCell = document.createElement("td");
+      departureCell.textContent = formatClock(train.departure_time);
+      row.appendChild(departureCell);
+
+      // TRAIN LENGTH
+      const lengthCell = document.createElement("td");
+      lengthCell.textContent =
+        `${train.platform_length_required ?? 0} m`;
+      row.appendChild(lengthCell);
+
+      // SEAT CAPACITY
+      const seatCell = document.createElement("td");
+      seatCell.textContent = train.seat_capacity ?? 0;
+      row.appendChild(seatCell);
+
+      // ROUTE BUTTON
+      const routeCell = document.createElement("td");
+
+      const routeButton = document.createElement("button");
+
+      routeButton.type = "button";
+      routeButton.className = "btn-view-route";
+      routeButton.textContent = "🗺️ VIEW ROUTE";
+
+      routeButton.setAttribute(
+        "aria-label",
+        `View route for ${train.train_name}`
+      );
+
+      routeButton.addEventListener("click", () => {
+
+        document
+          .querySelectorAll("#trainTableBody tr")
+          .forEach(r =>
+            r.classList.remove("selected-train-row")
+          );
+
+        row.classList.add("selected-train-row");
+
+        loadTrainRoute(train);
+
+      });
+
+      routeCell.appendChild(routeButton);
+      row.appendChild(routeCell);
+
+      // STATUS
+      const statusCell = document.createElement("td");
+
+      const statusBadge = document.createElement("span");
+
+      statusBadge.className = "status status-green";
+      statusBadge.textContent = "Scheduled";
+
+      statusCell.appendChild(statusBadge);
+      row.appendChild(statusCell);
+
+      tbody.appendChild(row);
+
+    });
+
+    message.textContent = trains.length
+      ? "Train details loaded successfully."
+      : "No trains found in the database.";
+
+  } catch (error) {
+
+    console.error("Train loading error:", error);
+
+    message.textContent =
+      "Could not load trains. Check whether the Spring Boot server is running.";
+
+  }
+
+}
+
+
+// ========================================
+// 2. CLOSE ROUTE
+// ========================================
+
+function closeRoute() {
+
+  document.getElementById("routeDetailsCard").style.display =
+    "none";
+
+  document
+    .querySelectorAll("#trainTableBody tr")
+    .forEach(row =>
+      row.classList.remove("selected-train-row")
+    );
+
+}
+
+
+// ========================================
+// 3. SWITCH TIMELINE / TABLE
+// ========================================
+
+function switchRouteView(view) {
+
+  const timelineView =
+    document.getElementById("timelineView");
+
+  const tableView =
+    document.getElementById("tableView");
+
+  const tabTimeline =
+    document.getElementById("tabTimeline");
+
+  const tabTable =
+    document.getElementById("tabTable");
+
+  if (view === "timeline") {
+
+    timelineView.style.display = "block";
+    tableView.style.display = "none";
+
+    tabTimeline.classList.add("active");
+    tabTable.classList.remove("active");
+
+  } else {
+
+    timelineView.style.display = "none";
+    tableView.style.display = "block";
+
+    tabTimeline.classList.remove("active");
+    tabTable.classList.add("active");
+
+  }
+
+}
+
+
+// ========================================
+// 4. LOAD SELECTED TRAIN ROUTE
+// ========================================
+
+async function loadTrainRoute(train) {
+
+  const card =
+    document.getElementById("routeDetailsCard");
+
+  const content =
+    document.getElementById("routeContent");
+
+  const message =
+    document.getElementById("routeMessage");
+
+  const timelineContainer =
+    document.getElementById("timelineContainer");
+
+  const routeTableBody =
+    document.getElementById("routeTableBody");
+
+  card.style.display = "block";
+  content.style.display = "none";
+
+  message.style.display = "block";
+  message.textContent =
+    "Loading station route and timetable...";
+
+  timelineContainer.replaceChildren();
+  routeTableBody.replaceChildren();
+
+  // HEADER DETAILS
+
+  document.getElementById("routeTrainNumber").textContent =
+    `Train #${train.train_number}`;
+
+  document.getElementById("routeTitle").textContent =
+    `${train.train_number} - ${train.train_name} Route Timeline`;
+
+  document.getElementById("routeSubtitle").textContent =
+    `Payanam Junction Timings: Arrival ${formatClock(train.arrival_time)} | Departure ${formatClock(train.departure_time)} · Required Platform: ${train.platform_length_required}m`;
+
+  switchRouteView("timeline");
+
+  card.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+
+  try {
+
+    const response = await fetch(
+      `/api/trains/${encodeURIComponent(train.id)}/route`
+    );
+
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    const stops = await response.json();
+
+    if (!Array.isArray(stops) || stops.length === 0) {
+
+      message.textContent =
+        "⚠️ No route stops found for this train. Please check the train_stops database table.";
+
+      return;
+
+    }
+
+    // SORT STOPS BY STOP ORDER
+
+    stops.sort(
+      (a, b) =>
+        Number(a.stopOrder) - Number(b.stopOrder)
+    );
+
+    // SHOW CONTENT
+
+    message.style.display = "none";
+    content.style.display = "block";
+
+    // ROUTE SUMMARY
+
+    const originStation =
+      stops[0].stationName || "Unknown Station";
+
+    const destinationStation =
+      stops[stops.length - 1].stationName || "Unknown Station";
+
+    const intermediateCount =
+      Math.max(0, stops.length - 2);
+
+    const totalHaltMinutes = stops.reduce(
+      (sum, stop) =>
+        sum + Number(stop.haltMinutes || 0),
+      0
+    );
+
+    // PAYANAM JUNCTION TIMING
+
+    const pyjStop = stops.find(stop =>
+      (stop.stationName || "")
+        .toLowerCase()
+        .includes("payanam")
+    );
+
+    const pyjTiming = pyjStop
+      ? `${Number(pyjStop.haltMinutes || 0)} min (${formatClock(pyjStop.arrivalTime)} - ${formatClock(pyjStop.departureTime)})`
+      : "En-route junction";
+
+    // UPDATE SUMMARY
+
+    document.getElementById("summaryOriginStation").textContent =
+      originStation;
+
+    document.getElementById("summaryDestStation").textContent =
+      destinationStation;
+
+    document.getElementById("summaryStopsCountBadge").textContent =
+      `${stops.length} Stations (${intermediateCount} Intermediate)`;
+
+    document.getElementById("summaryTotalStations").textContent =
+      stops.length;
+
+    document.getElementById("summaryTotalHalt").textContent =
+      `${totalHaltMinutes} mins`;
+
+    document.getElementById("summaryIntermediateStops").textContent =
+      intermediateCount;
+
+    document.getElementById("summaryPyjTiming").textContent =
+      pyjTiming;
+
+    // RENDER TIMELINE
+
+    renderJourneyTimeline(
+      stops,
+      timelineContainer
+    );
+
+    // RENDER TABLE
+
+    renderDetailedTable(
+      stops,
+      routeTableBody
+    );
+
+  } catch (error) {
+
+    console.error("Route loading error:", error);
+
+    message.style.display = "block";
+    message.textContent =
+      "❌ Could not load train route. Please verify Spring Boot server and MySQL database.";
+
+  }
+
+}
+
+
+// ========================================
+// 5. RENDER JOURNEY TIMELINE
+// ========================================
+
+function renderJourneyTimeline(stops, container) {
+
+  container.replaceChildren();
+
+  if (!stops || stops.length === 0) return;
+
+  // VERTICAL TRACK LINE
+
+  const trackLine = document.createElement("div");
+
+  trackLine.className = "timeline-track-line";
+
+  container.appendChild(trackLine);
+
+  stops.forEach((stop, index) => {
+
+    const isStart = index === 0;
+
+    const isDestination =
+      index === stops.length - 1;
+
+    const isPyj =
+      (stop.stationName || "")
+        .toLowerCase()
+        .includes("payanam");
+
+    // MAIN TIMELINE ITEM
+
+    const item = document.createElement("div");
+
+    item.className = "timeline-item";
+
+    // STATION MARKER
+
+    const nodeWrapper =
+      document.createElement("div");
+
+    nodeWrapper.className =
+      "timeline-node-wrapper";
+
+    const node = document.createElement("div");
+
+    node.className = "timeline-node";
+
+    if (isStart) {
+
+      node.classList.add("node-start");
+      node.textContent = "●";
+      node.setAttribute(
+        "aria-label",
+        "Starting station"
+      );
+
+    } else if (isDestination) {
+
+      node.classList.add("node-destination");
+      node.textContent = "⚑";
+      node.setAttribute(
+        "aria-label",
+        "Destination station"
+      );
+
+    } else {
+
+      node.classList.add("node-intermediate");
+      node.textContent = "📍";
+
+    }
+
+    nodeWrapper.appendChild(node);
+
+    const order = document.createElement("span");
+
+    order.className = "timeline-stop-order";
+
+    order.textContent =
+      `STOP ${stop.stopOrder ?? index + 1}`;
+
+    nodeWrapper.appendChild(order);
+
+    item.appendChild(nodeWrapper);
+
+    // STATION CARD
+
+    const card = document.createElement("div");
+
+    card.className = "timeline-card";
+
+    if (isStart) {
+
+      card.classList.add("card-start");
+
+    } else if (isDestination) {
+
+      card.classList.add("card-destination");
+
+    } else {
+
+      card.classList.add("card-intermediate");
+
+    }
+
+    // CARD HEADER
+
+    const heading = document.createElement("div");
+
+    heading.className = "card-header-row";
+
+    const titleGroup =
+      document.createElement("div");
+
+    titleGroup.className =
+      "station-title-group";
+
+    const stationName =
+      document.createElement("h4");
+
+    stationName.className =
+      "station-name-text";
+
+    stationName.textContent =
+      stop.stationName || "Unknown Station";
+
+    titleGroup.appendChild(stationName);
+
+    // START / DESTINATION BADGE
+
+    const badge = document.createElement("span");
+
+    badge.className = "station-tag";
+
+    if (isStart) {
+
+      badge.classList.add("tag-start");
+      badge.textContent = "🟢 START";
+
+    } else if (isDestination) {
+
+      badge.classList.add("tag-destination");
+      badge.textContent = "🏁 DESTINATION";
+
+    } else {
+
+      badge.classList.add("tag-intermediate");
+      badge.textContent =
+        `STOP ${stop.stopOrder ?? index + 1}`;
+
+    }
+
+    titleGroup.appendChild(badge);
+
+    // PAYANAM JUNCTION BADGE
+
+    if (isPyj) {
+
+      const pyjBadge =
+        document.createElement("span");
+
+      pyjBadge.className =
+        "station-tag tag-pyj";
+
+      pyjBadge.textContent =
+        "🚉 MAIN STATION · PYJ";
+
+      titleGroup.appendChild(pyjBadge);
+
+    }
+
+    heading.appendChild(titleGroup);
+
+    card.appendChild(heading);
+
+    // TIMING GRID
+
+    const grid = document.createElement("div");
+
+    grid.className = "station-timings-grid";
+
+    const arrival = formatClock(stop.arrivalTime);
+
+    const departure = formatClock(stop.departureTime);
+
+    const halt = Number(stop.haltMinutes || 0);
+
+    const timingData = [
+
+      {
+        label: "🕒 ARRIVAL",
+        value: arrival !== "—"
+          ? arrival
+          : isStart
+            ? "Starting Point"
+            : "Not Available"
+      },
+
+      {
+        label: "🕦 DEPARTURE",
+        value: departure !== "—"
+          ? departure
+          : isDestination
+            ? "Journey Ends"
+            : "Not Available"
+      },
+
+      {
+        label: "⏳ HALT DURATION",
+        value: isDestination
+          ? "Final Destination"
+          : isStart
+            ? "Journey Start"
+            : `${halt} minutes`
+      }
+
+    ];
+
+    timingData.forEach(data => {
+
+      const box = document.createElement("div");
+
+      box.className = "timing-box";
+
+      const label = document.createElement("span");
+
+      label.className = "timing-label";
+
+      label.textContent = data.label;
+
+      const value = document.createElement("span");
+
+      value.className = "timing-value";
+
+      value.textContent = data.value;
+
+      box.appendChild(label);
+      box.appendChild(value);
+
+      grid.appendChild(box);
+
+    });
+
+    card.appendChild(grid);
+
+    item.appendChild(card);
+
+    container.appendChild(item);
+
+  });
+
+}
+
+
+// ========================================
+// 6. RENDER DETAILED ROUTE TABLE
+// ========================================
+
+function renderDetailedTable(stops, tbody) {
+
+  tbody.replaceChildren();
+
+  stops.forEach((stop, index) => {
+
+    const isStart = index === 0;
+
+    const isDestination =
+      index === stops.length - 1;
+
+    const row = document.createElement("tr");
+
+    if (isStart) {
+      row.classList.add("row-start");
+    } else if (isDestination) {
+      row.classList.add("row-dest");
+    }
+
+    const type = isStart
+      ? "🟢 START"
+      : isDestination
+        ? "🏁 DESTINATION"
+        : "INTERMEDIATE";
+
+    const values = [
+
+      `#${stop.stopOrder ?? index + 1}`,
+
+      type,
+
+      stop.stationName || "Unknown Station",
+
+      formatClock(stop.arrivalTime),
+
+      formatClock(stop.departureTime),
+
+      isDestination
+        ? "Final Station"
+        : isStart
+          ? "Journey Start"
+          : `${Number(stop.haltMinutes || 0)} min`
+
+    ];
+
+    values.forEach((value, cellIndex) => {
+
+      const cell = document.createElement("td");
+
+      if (cellIndex === 2) {
+
+        const bold = document.createElement("b");
+
+        bold.textContent = value;
+
+        cell.appendChild(bold);
+
+      } else if (cellIndex === 1) {
+
+        const badge = document.createElement("span");
+
+        badge.className = isStart
+          ? "station-tag tag-start"
+          : isDestination
+            ? "station-tag tag-destination"
+            : "station-tag tag-intermediate";
+
+        badge.textContent = value;
+
+        cell.appendChild(badge);
+
+      } else {
+
+        cell.textContent = value;
+
+      }
+
+      row.appendChild(cell);
+
+    });
+
+    tbody.appendChild(row);
+
+  });
+
+}
+
+
+// ========================================
+// 7. FORMAT TIME
+// ========================================
+
+function formatClock(value) {
+
+  if (!value) return "—";
+
+  const parts = String(value).split(":");
+
+  if (parts.length < 2) return String(value);
+
+  let hour = Number(parts[0]);
+
+  const minute = parts[1];
+
+  if (Number.isNaN(hour)) return String(value);
+
+  const suffix = hour >= 12 ? "PM" : "AM";
+
+  hour = hour % 12 || 12;
+
+  return `${String(hour).padStart(2, "0")}:${minute} ${suffix}`;
+
+}
+
+
+// ========================================
+// 8. START APPLICATION
+// ========================================
+
+loadTrains();
+
+</script>
+
+</body>
+</html>

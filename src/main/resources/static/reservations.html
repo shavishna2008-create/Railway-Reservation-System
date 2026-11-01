@@ -1,0 +1,1368 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservations | Payanam Junction</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .booking-field {
+            margin-bottom: 16px;
+        }
+
+        .booking-field input,
+        .booking-field select {
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+            padding: 10px;
+            margin-top: 6px;
+        }
+
+        .train-details {
+            margin: 12px 0 18px;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-width: 500px;
+        }
+
+        .seat-availability {
+            max-width: 700px;
+            margin: 14px 0 20px;
+            padding: 18px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .seat-availability h3 {
+            margin-top: 0;
+        }
+
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(100px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .seat-box {
+            padding: 14px 8px;
+            border-radius: 8px;
+            text-align: center;
+            background: #f4f5f7;
+            border: 1px solid #e1e1e1;
+        }
+
+        .seat-box h2 {
+            margin: 0 0 5px;
+            font-size: 25px;
+        }
+
+        .seat-box p {
+            margin: 0;
+            font-size: 12px;
+        }
+
+        .seat-total h2 {
+            color: #333;
+        }
+
+        .seat-booked h2 {
+            color: #dc3545;
+        }
+
+        .seat-available h2 {
+            color: #198754;
+        }
+
+        .seat-waiting h2 {
+            color: #d97706;
+        }
+
+        .seat-progress {
+            width: 100%;
+            height: 12px;
+            background: #e9ecef;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .seat-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: #198754;
+            transition: width 0.3s ease;
+        }
+
+        .availability-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .availability-status.available {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .availability-status.full {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .availability-status.loading {
+            background: #e2e3e5;
+            color: #41464b;
+        }
+
+        .passenger-card {
+            max-width: 800px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 14px 0;
+        }
+
+        .passenger-card h3 {
+            margin-top: 0;
+        }
+
+        .passenger-fields-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .passenger-fields-grid label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .passenger-fields-grid input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+        .ticket-result {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 8px 0;
+        }
+
+        @media (max-width: 650px) {
+            .seat-grid {
+                grid-template-columns: repeat(2, minmax(100px, 1fr));
+            }
+
+            .passenger-card {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="brand">
+        <div class="logo">🚆</div>
+        <div>
+            <h2>Payanam Junction</h2>
+            <p>Railway Management System</p>
+        </div>
+    </div>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+        <h3>MAIN MENU</h3>
+        <a href="index.html">🏠 Dashboard</a>
+        <a href="trains.html">🚆 Train Services</a>
+        <a href="reservations.html" class="active">🎫 Reservations</a>
+        <a href="platforms.html">🚉 Platforms</a>
+        <a href="allocation.html">📍 Platform Allocation</a>
+        <a href="activity.html">📋 Activity Log</a>
+    </aside>
+
+    <main>
+
+        <h1 class="page-title">Reservations</h1>
+
+        <p class="page-subtitle">
+            Book tickets and manage passenger reservations.
+        </p>
+
+        <!-- RESERVATION STATISTICS -->
+
+        <section class="stats">
+
+            <div class="stat">
+                <h3>Total Requests</h3>
+                <h2 id="totalRequests">0</h2>
+            </div>
+
+            <div class="stat">
+                <h3>Confirmed</h3>
+                <h2 id="confirmedCount">0</h2>
+            </div>
+
+            <div class="stat">
+                <h3>Waiting List</h3>
+                <h2 id="waitingCount">0</h2>
+            </div>
+
+            <div class="stat">
+                <h3>Seats per Train</h3>
+                <h2>10</h2>
+            </div>
+
+        </section>
+
+        <!-- BOOK TICKETS -->
+
+        <section class="card">
+
+            <h2>Book Tickets</h2>
+
+            <p class="page-subtitle">
+                Select a train and enter details for each passenger.
+                You can book for up to 6 passengers at once.
+            </p>
+
+            <form id="bookingForm">
+
+                <!-- SELECT TRAIN -->
+
+                <div class="booking-field">
+
+                    <label for="trainId">Select Train</label><br>
+
+                    <select id="trainId" required>
+                        <option value="">Loading trains...</option>
+                    </select>
+
+                </div>
+
+                <!-- TRAIN DETAILS -->
+
+                <div id="trainDetails"
+                     class="train-details"
+                     style="display:none">
+
+                    <h3>Selected Train Details</h3>
+
+                    <p>
+                        <strong>Train Number:</strong>
+                        <span id="detailNumber">-</span>
+                    </p>
+
+                    <p>
+                        <strong>Train Name:</strong>
+                        <span id="detailName">-</span>
+                    </p>
+
+                    <p>
+                        <strong>Arrival:</strong>
+                        <span id="detailArrival">-</span>
+                    </p>
+
+                    <p>
+                        <strong>Departure:</strong>
+                        <span id="detailDeparture">-</span>
+                    </p>
+
+                    <p>
+                        <strong>Platform Length Required:</strong>
+                        <span id="detailLength">-</span>
+                    </p>
+
+                    <p>
+                        <strong>Seat Capacity:</strong>
+                        <span id="detailCapacity">-</span>
+                    </p>
+
+                </div>
+
+                <!-- NEW SEAT AVAILABILITY SECTION -->
+
+                <div id="seatAvailabilityCard"
+                     class="seat-availability"
+                     style="display:none">
+
+                    <h3>Live Seat Availability</h3>
+
+                    <p>
+                        <strong>Train:</strong>
+                        <span id="availabilityTrainName">-</span>
+                    </p>
+
+                    <div class="seat-grid">
+
+                        <div class="seat-box seat-total">
+                            <h2 id="totalSeats">0</h2>
+                            <p>Total Seats</p>
+                        </div>
+
+                        <div class="seat-box seat-booked">
+                            <h2 id="bookedSeats">0</h2>
+                            <p>Already Booked</p>
+                        </div>
+
+                        <div class="seat-box seat-available">
+                            <h2 id="availableSeats">0</h2>
+                            <p>Available Seats</p>
+                        </div>
+
+                        <div class="seat-box seat-waiting">
+                            <h2 id="waitingPassengers">0</h2>
+                            <p>Waiting List</p>
+                        </div>
+
+                    </div>
+
+                    <p id="seatPercentage">0% seats booked</p>
+
+                    <div class="seat-progress">
+                        <div id="seatProgressBar"
+                             class="seat-progress-bar">
+                        </div>
+                    </div>
+
+                    <span id="availabilityStatus"
+                          class="availability-status loading">
+                        Loading availability...
+                    </span>
+
+                    <p id="availabilityMessage"
+                       role="status"
+                       style="margin-top:12px">
+                    </p>
+
+                    <button type="button"
+                            id="refreshAvailabilityButton"
+                            style="margin-top:12px">
+                        Refresh Seat Availability
+                    </button>
+
+                </div>
+
+                <!-- PASSENGER COUNT -->
+
+                <div class="booking-field">
+
+                    <label for="passengerCount">
+                        Number of Passengers
+                    </label><br>
+
+                    <select id="passengerCount" required>
+                        <option value="1">1 Passenger</option>
+                        <option value="2">2 Passengers</option>
+                        <option value="3">3 Passengers</option>
+                        <option value="4">4 Passengers</option>
+                        <option value="5">5 Passengers</option>
+                        <option value="6">6 Passengers</option>
+                    </select>
+
+                </div>
+
+                <!-- PASSENGER FIELDS -->
+
+                <div id="passengerFields"></div>
+
+                <button type="submit" id="bookButton">
+                    Book Tickets
+                </button>
+
+                <p id="bookingMessage"
+                   role="status"
+                   style="margin-top:12px">
+                </p>
+
+                <div id="groupBookingResults"
+                     aria-live="polite">
+                </div>
+
+            </form>
+
+        </section>
+
+        <!-- RESERVATION RECORDS -->
+
+        <section class="card">
+
+            <h2>Passenger Booking Records</h2>
+
+            <p id="message"
+               class="page-subtitle"
+               role="status">
+                Loading reservations...
+            </p>
+
+            <div class="table-wrap">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Passenger Name</th>
+                            <th>Train</th>
+                            <th>Seat No.</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="reservationTableBody"></tbody>
+
+                </table>
+
+            </div>
+
+            <button type="button"
+                    id="refreshButton"
+                    style="margin-top:16px">
+                Refresh Records
+            </button>
+
+        </section>
+
+        <footer>
+            Payanam Junction Railway Reservation System
+        </footer>
+
+    </main>
+</div>
+
+<script>
+
+const bookingForm = document.getElementById("bookingForm");
+const bookingMessage = document.getElementById("bookingMessage");
+const bookButton = document.getElementById("bookButton");
+
+const trainSelect = document.getElementById("trainId");
+const trainDetails = document.getElementById("trainDetails");
+
+const passengerCountSelect =
+    document.getElementById("passengerCount");
+
+const passengerFields =
+    document.getElementById("passengerFields");
+
+const groupBookingResults =
+    document.getElementById("groupBookingResults");
+
+const seatAvailabilityCard =
+    document.getElementById("seatAvailabilityCard");
+
+let trains = [];
+let availabilityRequestNumber = 0;
+
+
+// ==========================================
+// DISPLAY MESSAGE
+// ==========================================
+
+function showMessage(element, message, color) {
+    element.textContent = message;
+    element.style.color = color || "";
+}
+
+
+// ==========================================
+// FORMAT TIME
+// ==========================================
+
+function formatTime(value) {
+
+    if (!value) {
+        return "-";
+    }
+
+    return String(value).substring(0, 8);
+}
+
+
+// ==========================================
+// GENERATE PASSENGER FIELDS
+// ==========================================
+
+function createPassengerFields() {
+
+    const count = Number(passengerCountSelect.value);
+
+    passengerFields.replaceChildren();
+
+    for (let i = 1; i <= count; i++) {
+
+        const card = document.createElement("section");
+        card.className = "passenger-card";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Passenger " + i;
+
+        card.appendChild(heading);
+
+        const grid = document.createElement("div");
+        grid.className = "passenger-fields-grid";
+
+        const fields = [
+            {
+                label: "Passenger Name",
+                name: "passengerName",
+                type: "text",
+                maxLength: 100,
+                placeholder: "Enter passenger name",
+                required: true
+            },
+            {
+                label: "Age",
+                name: "age",
+                type: "number",
+                min: "1",
+                max: "120",
+                step: "1",
+                placeholder: "Enter age",
+                required: true
+            },
+            {
+                label: "Phone Number (optional)",
+                name: "phone",
+                type: "tel",
+                maxLength: 15,
+                pattern: "[0-9+() -]{7,15}",
+                placeholder: "Enter phone number",
+                required: false
+            }
+        ];
+
+        fields.forEach(field => {
+
+            const wrapper = document.createElement("div");
+
+            const label = document.createElement("label");
+            const input = document.createElement("input");
+
+            const inputId =
+                "passenger" + i + "_" + field.name;
+
+            label.htmlFor = inputId;
+            label.textContent = field.label;
+
+            input.id = inputId;
+            input.name = field.name;
+            input.type = field.type;
+            input.required = field.required;
+            input.placeholder = field.placeholder;
+
+            if (field.maxLength) {
+                input.maxLength = field.maxLength;
+            }
+
+            if (field.min) {
+                input.min = field.min;
+            }
+
+            if (field.max) {
+                input.max = field.max;
+            }
+
+            if (field.step) {
+                input.step = field.step;
+            }
+
+            if (field.pattern) {
+                input.pattern = field.pattern;
+            }
+
+            wrapper.append(label, input);
+            grid.appendChild(wrapper);
+        });
+
+        card.appendChild(grid);
+        passengerFields.appendChild(card);
+    }
+}
+
+
+// ==========================================
+// LOAD TRAINS
+// ==========================================
+
+async function loadTrains() {
+
+    try {
+
+        const response = await fetch("/api/trains");
+
+        if (!response.ok) {
+            throw new Error("Could not load trains");
+        }
+
+        trains = await response.json();
+
+        trainSelect.replaceChildren();
+
+        const firstOption = document.createElement("option");
+
+        firstOption.value = "";
+
+        firstOption.textContent =
+            trains.length
+                ? "Select a train"
+                : "No trains available";
+
+        trainSelect.appendChild(firstOption);
+
+        trains.forEach(train => {
+
+            const option = document.createElement("option");
+
+            option.value = train.id;
+
+            option.textContent =
+                train.train_number + " - " + train.train_name;
+
+            trainSelect.appendChild(option);
+        });
+
+    } catch (error) {
+
+        trainSelect.replaceChildren();
+
+        const option = document.createElement("option");
+
+        option.value = "";
+        option.textContent = "Unable to load trains";
+
+        trainSelect.appendChild(option);
+
+        showMessage(
+            bookingMessage,
+            "Train list load aagala. Spring Boot server check pannunga.",
+            "red"
+        );
+
+        console.error(error);
+    }
+}
+
+
+// ==========================================
+// DISPLAY SELECTED TRAIN DETAILS
+// ==========================================
+
+function displayTrainDetails() {
+
+    const selectedId = Number(trainSelect.value);
+
+    const train = trains.find(
+        item => Number(item.id) === selectedId
+    );
+
+    if (!train) {
+
+        trainDetails.style.display = "none";
+        seatAvailabilityCard.style.display = "none";
+
+        return;
+    }
+
+    document.getElementById("detailNumber").textContent =
+        train.train_number ?? "-";
+
+    document.getElementById("detailName").textContent =
+        train.train_name ?? "-";
+
+    document.getElementById("detailArrival").textContent =
+        formatTime(train.arrival_time);
+
+    document.getElementById("detailDeparture").textContent =
+        formatTime(train.departure_time);
+
+    document.getElementById("detailLength").textContent =
+        (train.platform_length_required ?? "-") + " m";
+
+    document.getElementById("detailCapacity").textContent =
+        train.seat_capacity ?? "-";
+
+    trainDetails.style.display = "block";
+
+    // Fetch live seat availability
+    loadSeatAvailability(selectedId);
+}
+
+
+// ==========================================
+// LOAD LIVE SEAT AVAILABILITY
+// ==========================================
+
+async function loadSeatAvailability(trainId) {
+
+    if (!trainId) {
+
+        seatAvailabilityCard.style.display = "none";
+
+        return;
+    }
+
+    const requestNumber = ++availabilityRequestNumber;
+
+    seatAvailabilityCard.style.display = "block";
+
+    document.getElementById("availabilityTrainName").textContent =
+        "Loading...";
+
+    document.getElementById("totalSeats").textContent = "...";
+    document.getElementById("bookedSeats").textContent = "...";
+    document.getElementById("availableSeats").textContent = "...";
+    document.getElementById("waitingPassengers").textContent = "...";
+
+    document.getElementById("seatPercentage").textContent =
+        "Fetching seat details...";
+
+    document.getElementById("seatProgressBar").style.width = "0%";
+
+    const statusElement =
+        document.getElementById("availabilityStatus");
+
+    statusElement.className = "availability-status loading";
+    statusElement.textContent = "Loading availability...";
+
+    showMessage(
+        document.getElementById("availabilityMessage"),
+        "",
+        ""
+    );
+
+    try {
+
+        const response = await fetch(
+            "/api/trains/" + trainId + "/seat-availability"
+        );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to fetch seat availability"
+            );
+        }
+
+        const data = await response.json();
+
+        // Ignore old response if user selected another train
+        if (requestNumber !== availabilityRequestNumber ||
+            Number(trainSelect.value) !== Number(trainId)) {
+
+            return;
+        }
+
+        const total = Number(data.totalSeats);
+        const booked = Number(data.bookedSeats);
+        const available = Number(data.availableSeats);
+        const waiting = Number(data.waitingPassengers);
+
+        document.getElementById("availabilityTrainName").textContent =
+            data.trainNumber + " - " + data.trainName;
+
+        document.getElementById("totalSeats").textContent =
+            total;
+
+        document.getElementById("bookedSeats").textContent =
+            booked;
+
+        document.getElementById("availableSeats").textContent =
+            available;
+
+        document.getElementById("waitingPassengers").textContent =
+            waiting;
+
+        const percentage = total > 0
+            ? Math.round((booked / total) * 100)
+            : 0;
+
+        document.getElementById("seatPercentage").textContent =
+            percentage + "% seats booked";
+
+        document.getElementById("seatProgressBar").style.width =
+            Math.min(percentage, 100) + "%";
+
+        if (data.status === "FULL" || available <= 0) {
+
+            statusElement.className =
+                "availability-status full";
+
+            statusElement.textContent =
+                "TRAIN FULL";
+
+            showMessage(
+                document.getElementById("availabilityMessage"),
+                "All seats are booked. New bookings will be added to the waiting list.",
+                "#b02a37"
+            );
+
+        } else {
+
+            statusElement.className =
+                "availability-status available";
+
+            statusElement.textContent =
+                "SEATS AVAILABLE";
+
+            showMessage(
+                document.getElementById("availabilityMessage"),
+                available + " seat(s) available for booking.",
+                "#198754"
+            );
+        }
+
+    } catch (error) {
+
+        if (requestNumber !== availabilityRequestNumber) {
+            return;
+        }
+
+        statusElement.className =
+            "availability-status full";
+
+        statusElement.textContent =
+            "Unable to load";
+
+        showMessage(
+            document.getElementById("availabilityMessage"),
+            "Seat availability load aagala. Please refresh.",
+            "red"
+        );
+
+        console.error(error);
+    }
+}
+
+
+// ==========================================
+// DISPLAY GROUP BOOKING RESULTS
+// ==========================================
+
+function renderGroupResults(tickets) {
+
+    groupBookingResults.replaceChildren();
+
+    const heading = document.createElement("h3");
+
+    heading.textContent = "Booking Results";
+
+    groupBookingResults.appendChild(heading);
+
+    tickets.forEach(ticket => {
+
+        const item = document.createElement("div");
+
+        item.className = "ticket-result";
+
+        const bookingId =
+            ticket.reservationId ?? ticket.id;
+
+        const seatText = ticket.seatNumber == null
+            ? "Waiting list"
+            : String(ticket.seatNumber).padStart(2, "0");
+
+        const idText = bookingId == null
+            ? "Booking ID unavailable"
+            : "Booking ID: BK" +
+                String(bookingId).padStart(4, "0");
+
+        item.textContent =
+            (ticket.passengerName ?? "Passenger") +
+            " — " + idText +
+            " | Status: " + (ticket.status ?? "UNKNOWN") +
+            " | Seat: " + seatText;
+
+        groupBookingResults.appendChild(item);
+    });
+}
+
+
+// ==========================================
+// TRAIN SELECTION EVENT
+// ==========================================
+
+trainSelect.addEventListener(
+    "change",
+    displayTrainDetails
+);
+
+
+// ==========================================
+// PASSENGER COUNT EVENT
+// ==========================================
+
+passengerCountSelect.addEventListener(
+    "change",
+    createPassengerFields
+);
+
+
+// ==========================================
+// MANUAL AVAILABILITY REFRESH
+// ==========================================
+
+document.getElementById(
+    "refreshAvailabilityButton"
+).addEventListener("click", function() {
+
+    const trainId = Number(trainSelect.value);
+
+    if (trainId > 0) {
+        loadSeatAvailability(trainId);
+    }
+});
+
+
+// ==========================================
+// GROUP BOOKING SUBMIT
+// ==========================================
+
+bookingForm.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const trainId = Number(trainSelect.value);
+
+    if (!Number.isInteger(trainId) || trainId < 1) {
+
+        showMessage(
+            bookingMessage,
+            "Oru train select pannunga.",
+            "red"
+        );
+
+        return;
+    }
+
+    const passengerCards = Array.from(
+        passengerFields.querySelectorAll(".passenger-card")
+    );
+
+    const passengers = passengerCards.map(card => ({
+
+        passengerName:
+            card.querySelector('[name="passengerName"]').value.trim(),
+
+        age:
+            Number(card.querySelector('[name="age"]').value),
+
+        phone:
+            card.querySelector('[name="phone"]').value.trim() || null
+
+    }));
+
+    // Validate passengers
+    for (let i = 0; i < passengers.length; i++) {
+
+        const passenger = passengers[i];
+
+        if (!passenger.passengerName ||
+            passenger.passengerName.length > 100) {
+
+            showMessage(
+                bookingMessage,
+                "Passenger " + (i + 1) +
+                ": valid name enter pannunga.",
+                "red"
+            );
+
+            return;
+        }
+
+        if (!Number.isInteger(passenger.age) ||
+            passenger.age < 1 ||
+            passenger.age > 120) {
+
+            showMessage(
+                bookingMessage,
+                "Passenger " + (i + 1) +
+                ": age 1 to 120 kulla irukkanum.",
+                "red"
+            );
+
+            return;
+        }
+
+        if (passenger.phone &&
+            passenger.phone.length > 15) {
+
+            showMessage(
+                bookingMessage,
+                "Passenger " + (i + 1) +
+                ": phone number 15 characters-kulla irukkanum.",
+                "red"
+            );
+
+            return;
+        }
+    }
+
+    if (passengers.length < 1 || passengers.length > 6) {
+
+        showMessage(
+            bookingMessage,
+            "1 to 6 passengers select pannunga.",
+            "red"
+        );
+
+        return;
+    }
+
+    bookButton.disabled = true;
+
+    groupBookingResults.replaceChildren();
+
+    showMessage(
+        bookingMessage,
+        "Group booking process aagudhu...",
+        ""
+    );
+
+    try {
+
+        const response = await fetch(
+            "/api/reservations/group",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    trainId: trainId,
+                    passengers: passengers
+                })
+            }
+        );
+
+        const responseText = await response.text();
+
+        let result = {};
+
+        try {
+
+            result = responseText
+                ? JSON.parse(responseText)
+                : {};
+
+        } catch {
+
+            result = {
+                message: responseText
+            };
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                result.error ||
+                "Booking failed. Server error: " +
+                response.status
+            );
+        }
+
+        const tickets = Array.isArray(result.tickets)
+            ? result.tickets
+            : [];
+
+        if (!tickets.length) {
+
+            throw new Error(
+                "Booking response-la ticket details kidaikkala."
+            );
+        }
+
+        const confirmedCount = tickets.filter(
+            ticket => ticket.status === "CONFIRMED"
+        ).length;
+
+        const waitingCount = tickets.filter(
+            ticket => ticket.status === "WAITING"
+        ).length;
+
+        showMessage(
+            bookingMessage,
+
+            "Group booking successful! " +
+            tickets.length + " passenger(s) processed. " +
+            "Confirmed: " + confirmedCount +
+            ", Waiting list: " + waitingCount + ".",
+
+            "green"
+        );
+
+        renderGroupResults(tickets);
+
+        // Refresh reservation records
+        await loadReservations();
+
+        // Refresh live seat availability
+        await loadSeatAvailability(trainId);
+
+        // Reset passenger details but retain selected train
+        passengerCountSelect.value = "1";
+
+        createPassengerFields();
+
+    } catch (error) {
+
+        showMessage(
+            bookingMessage,
+            "Booking failed: " + error.message,
+            "red"
+        );
+
+    } finally {
+
+        bookButton.disabled = false;
+    }
+});
+
+
+// ==========================================
+// LOAD RESERVATION RECORDS
+// ==========================================
+
+async function loadReservations() {
+
+    const tbody =
+        document.getElementById("reservationTableBody");
+
+    const message =
+        document.getElementById("message");
+
+    message.textContent = "Loading reservations...";
+
+    try {
+
+        const response = await fetch("/api/reservations");
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const reservations = await response.json();
+
+        document.getElementById("totalRequests").textContent =
+            reservations.length;
+
+        document.getElementById("confirmedCount").textContent =
+            reservations.filter(
+                r => r.status === "CONFIRMED"
+            ).length;
+
+        document.getElementById("waitingCount").textContent =
+            reservations.filter(
+                r => r.status === "WAITING"
+            ).length;
+
+        tbody.replaceChildren();
+
+        reservations.forEach(reservation => {
+
+            const row = document.createElement("tr");
+
+            const values = [
+
+                "BK" + String(reservation.id).padStart(4, "0"),
+
+                reservation.passengerName,
+
+                reservation.trainName,
+
+                reservation.seatNumber == null
+                    ? "--"
+                    : String(reservation.seatNumber).padStart(2, "0")
+            ];
+
+            values.forEach(value => {
+
+                const cell = document.createElement("td");
+
+                cell.textContent = value ?? "";
+
+                row.appendChild(cell);
+            });
+
+            // Status
+            const statusCell = document.createElement("td");
+
+            const statusBadge = document.createElement("span");
+
+            statusBadge.className =
+                "status " +
+                (
+                    reservation.status === "CONFIRMED"
+                        ? "status-green"
+                        : reservation.status === "WAITING"
+                            ? "status-orange"
+                            : ""
+                );
+
+            statusBadge.textContent = reservation.status;
+
+            statusCell.appendChild(statusBadge);
+
+            row.appendChild(statusCell);
+
+            // Cancel button
+            const actionCell = document.createElement("td");
+
+            if (reservation.status === "CONFIRMED") {
+
+                const cancelButton =
+                    document.createElement("button");
+
+                cancelButton.type = "button";
+
+                cancelButton.textContent = "Cancel";
+
+                cancelButton.addEventListener(
+                    "click",
+                    () => cancelReservation(reservation.id)
+                );
+
+                actionCell.appendChild(cancelButton);
+
+            } else {
+
+                actionCell.textContent = "--";
+            }
+
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        });
+
+        message.textContent = reservations.length
+            ? "Reservation records loaded successfully."
+            : "No reservations found.";
+
+    } catch (error) {
+
+        message.textContent =
+            "Could not load reservations. Check the Spring Boot server.";
+
+        console.error(error);
+    }
+}
+
+
+// ==========================================
+// CANCEL TICKET
+// ==========================================
+
+async function cancelReservation(id) {
+
+    const confirmed = window.confirm(
+        "Are you sure you want to cancel booking BK" +
+        String(id).padStart(4, "0") + "?"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "/api/reservations/" + id + "/cancel",
+            {
+                method: "POST"
+            }
+        );
+
+        const responseText = await response.text();
+
+        let result = {};
+
+        try {
+
+            result = responseText
+                ? JSON.parse(responseText)
+                : {};
+
+        } catch {
+
+            result = {
+                message: responseText
+            };
+        }
+
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                result.error ||
+                "Cancellation failed"
+            );
+        }
+
+        alert(result.message || "Reservation cancelled.");
+
+        await loadReservations();
+
+        // Refresh availability for the selected train
+        const selectedTrainId = Number(trainSelect.value);
+
+        if (selectedTrainId > 0) {
+            await loadSeatAvailability(selectedTrainId);
+        }
+
+    } catch (error) {
+
+        alert("Cancellation failed: " + error.message);
+    }
+}
+
+
+// ==========================================
+// REFRESH RESERVATION RECORDS
+// ==========================================
+
+document.getElementById("refreshButton").addEventListener(
+    "click",
+    async function() {
+
+        await loadReservations();
+
+        const selectedTrainId = Number(trainSelect.value);
+
+        if (selectedTrainId > 0) {
+            await loadSeatAvailability(selectedTrainId);
+        }
+    }
+);
+
+
+// ==========================================
+// INITIAL LOADING
+// ==========================================
+
+createPassengerFields();
+
+loadTrains();
+
+loadReservations();
+
+</script>
+
+</body>
+</html>
